@@ -342,6 +342,129 @@
             }
             return [sec, min, hour, dom, month, dow, year].join(" ");
         };
+		
+		base.parseExpression = function(exp) {
+			var subexps = exp.split(' ');
+			
+			if (subexps[0] == '*' || subexps[0].indexOf('0/') == 0) {
+				base.$el.find("select.cron-period-select option[value=Seconds]").prop('selected', 'selected').change();
+				
+				var every = 1;
+				if (subexps[0].indexOf('0/') == 0) {
+					every = subexps[0].split('/')[1];
+				}
+				
+				base.$el.find("select.cron-seconds-select option[value=" + every + "]").prop('selected', 'selected').change();
+			}
+			else if (subexps[1] == '*' || subexps[1].indexOf('0/') == 0) {
+				base.$el.find("select.cron-period-select option[value=Minutes]").prop('selected', 'selected').change();
+				
+				var every = 1;
+				if (subexps[1].indexOf('0/') == 0) {
+					every = subexps[1].split('/')[1];
+				}
+				
+				base.$el.find("select.cron-minutes-select option[value=" + every + "]").prop('selected', 'selected').change();
+			}
+			else if (subexps[2] == '*' || subexps[2].indexOf('0/') == 0 || subexps[3] == '*') {
+				base.$el.find("select.cron-period-select option[value=Hourly]").prop('selected', 'selected').change();
+				
+				if (subexps[2] == '*' || subexps[2].indexOf('0/') == 0) {
+					base.$el.find("input[name=hourlyType][value=every]").prop('checked', true);
+					
+					var every = 1;
+					if (subexps[2].indexOf('0/') == 0) {
+						every = subexps[2].split('/')[1];
+					}
+					
+					base.$el.find("select.cron-hourly-select option[value=" + every + "]").prop('selected', 'selected').change();
+				}
+				else {
+					base.$el.find("input[name=hourlyType][value=clock]").prop('checked', true);
+					
+					base.$el.find("select.cron-hourly-hour option[value=" + subexps[2] + "]").prop('selected', 'selected').change();
+					base.$el.find("select.cron-hourly-minute option[value=" + subexps[1] + "]").prop('selected', 'selected').change();
+					base.$el.find("select.cron-hourly-second option[value=" + subexps[0] + "]").prop('selected', 'selected').change();
+				}
+			}
+			else {
+				if (subexps[2].indexOf('1/') == 0 || subexps[5] == 'MON-FRI') {
+					base.$el.find("select.cron-period-select option[value=Daily]").prop('selected', 'selected').change();
+					
+					if (subexps[5] == 'MON-FRI') {
+						base.$el.find("input[name=dailyType][value=clock]").prop('checked', true);
+					}
+					else {
+						base.$el.find("input[name=dailyType][value=every]").prop('checked', true);
+						
+						var every = 1;
+						if (subexps[3].indexOf('1/') == 0) {
+							every = subexps[3].split('/')[1];
+						}
+						
+						base.$el.find("select.cron-daily-select option[value=" + every + "]").prop('selected', 'selected').change();
+					}
+				}
+				else if (subexps[5] == '*' || (subexps[5] != '?' && subexps[5].indexOf('#') == -1)) {
+					base.$el.find("select.cron-period-select option[value=Weekly]").prop('selected', 'selected').change();
+					
+					if (subexps[5] != '*') {
+						var weekdays = subexps[5].split(',');
+						base.$el.find(".cron-weekly input[type=checkbox]").prop('checked', false);
+						for (var i in weekdays) {
+							base.$el.find(".cron-weekly input[name=dayOfWeek" + weekdays[i].charAt(0).toUpperCase() + weekdays[i].toLowerCase().slice(1) + "]").prop('checked', true);
+						}
+					}
+				}
+				else if (subexps[4] == '*' || subexps[4].indexOf('1/') == 0) {
+					base.$el.find("select.cron-period-select option[value=Monthly]").prop('selected', 'selected').change();
+					
+					var every = 1;
+					if (subexps[4].indexOf('1/') == 0) {
+						every = subexps[4].split('/')[1];
+					}
+					
+					if (subexps[3] != '?') {
+						base.$el.find("input[name=monthlyType][value=byDay]").prop('checked', true);
+						base.$el.find("select.cron-monthly-month option[value=" + every + "]").prop('selected', 'selected').change();
+						base.$el.find("select.cron-monthly-day option[value=" + subexps[3] + "]").prop('selected', 'selected').change();
+					}
+					else {
+						base.$el.find("input[name=monthlyType][value=byWeek]").prop('checked', true);
+						base.$el.find("select.cron-monthly-month-by-week option[value=" + every + "]").prop('selected', 'selected').change();
+						
+						var weekday = subexps[5].split('#')[0],
+							nthDay = subexps[5].split('#')[1];
+						
+						base.$el.find("select.cron-monthly-day-of-week option[value=" + weekday + "]").prop('selected', 'selected').change();
+						base.$el.find("select.cron-monthly-nth-day option[value=" + nthDay + "]").prop('selected', 'selected').change();
+					}
+				}
+				else {
+					base.$el.find("select.cron-period-select option[value=Yearly]").prop('selected', 'selected').change();
+					
+					if (subexps[3] != '?') {
+						base.$el.find("input[name=yealyType][value=byDay]").prop('checked', true);
+						base.$el.find("select.cron-yearly-month option[value=" + subexps[4] + "]").prop('selected', 'selected').change();
+						base.$el.find("select.cron-yearly-day option[value=" + subexps[3] + "]").prop('selected', 'selected').change();
+					}
+					else {
+						base.$el.find("input[name=yearlyType][value=byWeek]").prop('checked', true);
+						base.$el.find("select.cron-yearly-month-by-week option[value=" + subexps[4] + "]").prop('selected', 'selected').change();
+						
+						var weekday = subexps[5].split('#')[0],
+							nthDay = subexps[5].split('#')[1];
+						
+						base.$el.find("select.cron-yearly-day-of-week option[value=" + weekday + "]").prop('selected', 'selected').change();
+						base.$el.find("select.cron-yearly-nth-day option[value=" + nthDay + "]").prop('selected', 'selected').change();
+					}
+				}
+				
+				base.$el.find("select.cron-clock-hour option[value=" + subexps[2] + "]").prop('selected', 'selected').change();
+				base.$el.find("select.cron-clock-minute option[value=" + subexps[1] + "]").prop('selected', 'selected').change();
+				base.$el.find("select.cron-clock-second option[value=" + subexps[0] + "]").prop('selected', 'selected').change();
+			}
+		};
 
         base.init();
     };
